@@ -3,16 +3,23 @@ import numpy as np
 import os
 from itertools import product
 import time
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler # or StandardScaler
 from sklearn.model_selection import LeaveOneGroupOut
+from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error, mean_squared_error
 import tensorflow as tf
 import keras
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, GRU, Dense, Input
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.optimizers import Adam, SGD
+import random
 
-def load_and_split_data(path="datasets/CNAP_blood_pressure.csv"):
+# Set random seeds for reproducibility
+random.seed(42)
+np.random.seed(42)
+tf.random.set_seed(42)
+
+def load_data(path="datasets/CNAP_blood_pressure.csv"):
     """Load and preprocess data"""
     # load data
     df = pd.read_csv(path)
@@ -27,14 +34,15 @@ def load_and_split_data(path="datasets/CNAP_blood_pressure.csv"):
     
     # apply MinMaxScaler
     scaler_x = MinMaxScaler()
-    X_scaled = scaler_x.fit_transform(X)
-    X = X_scaled
+    scaler_y = MinMaxScaler()
+    X = scaler_x.fit_transform(X)
+    y = scaler_y.fit_transform(y)
     
     # reshape to (samples, timesteps, features)
     X = X.reshape((-1, 3, 100))
     X = np.transpose(X, (0, 2, 1))
     
-    return X, y, groups
+    return X, y, scaler_y, groups
 
 def build_model(config):
     """Build the neural network model based on configuration"""
@@ -82,7 +90,7 @@ def build_model(config):
             model.add(Dense(units=units, activation='relu'))
     
     # Output layer for regression (SBP, DBP)
-    model.add(Dense(2))
+    model.add(Dense(2, activation='linear'))
     
     # Choose optimizer with learning rate
     if config['OPTIMIZER'] == 'adam':
@@ -105,7 +113,7 @@ def train_model(config):
     path = "datasets/CNAP_blood_pressure.csv"
     
     # load data
-    X, y, groups = load_and_split_data(path)
+    X, y, scaler_y, groups = load_data(path)
     
     # Leave-One-Group-Out cross-validation
     logo = LeaveOneGroupOut()
@@ -138,10 +146,18 @@ def train_model(config):
             callbacks=[early_stop],
             verbose=0  # Silent training for grid search
         )
-        
-        # Evaluate model
-        loss, mae, mape = model.evaluate(X_val, y_val, verbose=0)
-        
+
+        # Rescale predictions back to original scale
+        y_pred = model.predict(X_val)
+        y_pred_rescaled = scaler_y.inverse_transform(y_pred)
+        y_val_rescaled = scaler_y.inverse_transform(y_val)
+
+        # Evaluate on the original scale
+        mae = mean_absolute_error(y_val_rescaled, y_pred_rescaled)
+        mape = mean_absolute_percentage_error(y_val_rescaled, y_pred_rescaled)
+        loss = mean_squared_error(y_val_rescaled, y_pred_rescaled)
+
+        # Store results
         results.append({
             'fold': fold + 1,
             'subject': test_subject,
@@ -188,7 +204,7 @@ def grid_search(param_grid):
     print(f"Total combinations to evaluate: {len(complete_grid)}")
     
     all_results = []
-    all_fold_results = []  # Store all individual fold results
+    all_fold_results = []
     
     for i, config in enumerate(complete_grid):
         print(f"\nEvaluating combination {i + 1}/{len(complete_grid)}")
@@ -314,10 +330,11 @@ def grid_search(param_grid):
 
 if __name__ == "__main__":
     # Small test grid for quick validation
+    ### ADD DROUPOUT LAYER OPTION???
     test_param_grid = {
         'CLASSIFICADOR': ['LSTM', 'GRU'],
         'ARCHITECTURE': ['mixed'],
-        'RECURRENT_LAYERS': [(32, 16)],
+        'RECURRENT_LAYERS': [(64, 32)],
         'DENSE_LAYERS': [(32,)],
         'BATCH_SIZE': [16, 32],
         'LEARNING_RATE': [0.001, 0.01],
@@ -328,9 +345,9 @@ if __name__ == "__main__":
 
     # Define layer configurations for different architectures
     # RECURRENT_LAYERS = [
-    #     (8,), (16,), (32,), (64,), (128,),
+    #     (32,), (64,), (128,),
     #     (8, 4), (16, 8), (32, 16), (64, 32), (128, 64),
-    #     (8, 4, 2), (16, 8, 4), (32, 16, 8), (64, 32, 16)
+    #     (32, 16, 8), (64, 32, 16)
     # ]
 
     # DENSE_LAYERS = [
@@ -341,7 +358,7 @@ if __name__ == "__main__":
 
     # param_grid = {
     #     'CLASSIFICADOR': ['LSTM', 'GRU'],
-    #     'ARCHITECTURE': ['pure_recurrent', 'mixed'],  # New parameter for architecture type
+    #     'ARCHITECTURE': ['pure_recurrent', 'mixed'],  # architecture type
     #     'RECURRENT_LAYERS': RECURRENT_LAYERS,
     #     'DENSE_LAYERS': DENSE_LAYERS,
     #     'BATCH_SIZE': [8, 16, 32, 64, 128],
