@@ -1,2 +1,2 @@
 # blood_pressure_estimator
-Estimeting blood pressure with Neural Networks
+Estimating systolic and diastolic blood pressure with Neural Networks
