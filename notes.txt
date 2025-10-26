@@ -1,0 +1,11 @@
+Seismocardiography (SCG) is the noninvasive measurement of local vibrations of the chest wall produced by the mechanical activity of the heart.
+Electrocardiography (ECG) measures the heart eletric activity.
+Photoplethysmography (PPG) is a simple optical technique used to detect volumetric changes in blood in peripheral circulation, by shining 
+a light source onto the skin and measuring the light that is absorbed or reflected.
+
+Extract signals:
+- Pulse Transit Time (PTT) - Is not possible, needs two PPG sensors in different parts of the body.
+- Pulse Arrival Time (PAT) - Can be extracted from the PPG and ECG signals.
+- Pulse Wave Velocity (PWV)
+- Heart Rate (HR)
+

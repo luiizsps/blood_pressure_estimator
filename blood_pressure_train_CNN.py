@@ -20,6 +20,9 @@ random.seed(42)
 np.random.seed(42)
 tf.random.set_seed(42)
 
+# run on CPU
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 # -----------------------
 # FUNÇÃO DE CARREGAMENTO DE DADOS
 # -----------------------
@@ -277,15 +280,15 @@ def grid_search(param_grid):
 if __name__ == "__main__":
     cnn_param_grid = {
         'CLASSIFICADOR': ['CNN1D'],
-        'FILTERS': [(32,), (64,), (64, 32), (128, 64)],
-        'KERNEL_SIZES': [(3,), (5,), (5, 3)],
-        'DENSE_LAYERS': [(64,), (128, 64)],
+        'FILTERS': [(64, 32)],
+        'KERNEL_SIZES': [(5,), (5, 3)],
+        'DENSE_LAYERS': [(64,)],
         'BATCH_SIZE': [16, 32],
         'LEARNING_RATE': [0.001, 0.01],
         'EPOCHS': [50],
         'ACTIVATION': ['relu'],
         'OPTIMIZER': ['adam'],
-        'DROPOUT_RATE': [0.0, 0.2, 0.5],
+        'DROPOUT_RATE': [0.0, 0.5],
         'USE_POOLING': [True, False]
     }
 
