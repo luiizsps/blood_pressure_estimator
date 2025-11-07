@@ -6,6 +6,6 @@ a light source onto the skin and measuring the light that is absorbed or reflect
 Extract signals:
 - Pulse Transit Time (PTT) - Is not possible, needs two PPG sensors in different parts of the body.
 - Pulse Arrival Time (PAT) - Can be extracted from the PPG and ECG signals.
-- Pulse Wave Velocity (PWV)
+- Pulse Wave Velocity (PWV) - 
 - Heart Rate (HR)
 
