@@ -1,0 +1,7 @@
+dataset,metric,SBP,DBP
+train,MAPE (%),13.19,16.93
+train,RMSE (mmHg),17.93,12.16
+train,MAE (mmHg),14.45,9.54
+test,MAPE (%),12.32,16.69
+test,RMSE (mmHg),17.00,12.17
+test,MAE (mmHg),13.66,9.49
